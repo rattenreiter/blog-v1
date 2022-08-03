@@ -28,8 +28,7 @@ app.get("/", (req, res) => {
     ejsObjects.siteTitle = 'Home';
     ejsObjects.siteText = homeStartingContent;
     res.render("site", ejsObjects);
-    console.log(ejsObjects);
-    dynamicRoutes(ejsObjects);
+    dynamicRoutes();
 });
 
 app.get("/about", (req, res) => {
@@ -86,12 +85,12 @@ app.listen(process.env.PORT || 3000, () => {
 
 // Dynamic Routes
 // ---------------------------------------------
-let dynamicRoutes = (ejsObjects) => {
-    for (let i=0; i < ejsObjects.posts.length; i++) {
-        app.get(ejsObjects.posts[i].postLink, (req, res) => {
-            ejsObjects.siteTitle = ejsObjects.posts[i].postHeadline;
-            ejsObjects.siteText = ejsObjects.posts[i].postText;
-            res.render("post",ejsObjects);
-        })
-    };
+let dynamicRoutes = () => {
+        ejsObjects.posts.forEach((post) => {
+            app.get(post.postLink, (req, res) => {
+                ejsObjects.siteTitle = post.postHeadline;
+                ejsObjects.siteText = post.postText;
+                res.render("post", ejsObjects);
+            });
+        });
 };
