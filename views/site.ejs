@@ -2,6 +2,18 @@
    <h1><%= siteTitle %></h1>
    <% if (siteTitle !== 'Compose') { %>
       <p><%= siteText %></p>
+      <% if (posts.length) { %>
+         <div class="container">
+            <% for (i=0; i<posts.length; i++) { %>
+               <h3><%= posts[i].postHeadline %></h3>
+               <p>
+                  <%= posts[i].postExcerpt %>[...]
+                  <a href="<%- posts[i].postLink -%>">Read More</a>
+               </p>
+            <% } %>
+         </div>
+      <% } %>
+   
    <% }  else { %>
       <form action="/" name="composeForm" class="form-signin" method="post">
          <p><input class="form-control" type="text" name="postHeadline" placeholder="Post Headline"></p>
