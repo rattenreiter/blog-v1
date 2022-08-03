@@ -33,28 +33,28 @@ app.get("/", (req, res) => {
     ejsObjects.siteTitle = 'Home';
     ejsObjects.siteText = homeStartingContent;
     console.log(ejsObjects.posts);
-    res.render("home", ejsObjects);
+    res.render("site", ejsObjects);
 
 });
 
 app.get("/about", (req, res) => {
     ejsObjects.siteTitle = 'About';
     ejsObjects.siteText = aboutContent;
-    res.render("home", ejsObjects);
+    res.render("site", ejsObjects);
 
 });
 
 app.get("/contact", (req, res) => {
     ejsObjects.siteTitle = 'Contact';
     ejsObjects.siteText = contactContent;
-    res.render("home", ejsObjects);
+    res.render("site", ejsObjects);
 
 });
 
 app.get("/compose", (req, res) => {
     ejsObjects.siteTitle = 'Compose';
     ejsObjects.siteText = '';
-    res.render("compose", ejsObjects);
+    res.render("site", ejsObjects);
 });
 
 // POSTS
