@@ -63,10 +63,9 @@ app.post("/", (req, res) => {
         postHeadline: postHeadline,
         postText: postText,
         postExcerpt: postExcerpt,
-        postLink: '/' + postLink.replace(/ /g,'-')
+        postLink: '/posts/' + postLink.replace(/ /g,'-')
     };
     ejsObjects.posts.push(postObject);
-
     res.redirect("/");
 });
 
