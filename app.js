@@ -29,6 +29,7 @@ app.get("/", (req, res) => {
     ejsObjects.siteText = homeStartingContent;
     res.render("site", ejsObjects);
     console.log(ejsObjects);
+    dynamicRoutes(ejsObjects);
 });
 
 app.get("/about", (req, res) => {
@@ -51,8 +52,6 @@ app.get("/compose", (req, res) => {
     res.render("site", ejsObjects);
 });
 
-// Dynamic Routes
-// ---------------------------------------------
 
 // POSTS
 // ---------------------------------------------
@@ -77,3 +76,22 @@ app.post("/", (req, res) => {
 app.listen(process.env.PORT || 3000, () => {
     console.log('Server ON on Port 3000');
 });
+
+
+
+// GLOBAL FUNCTIONS
+// ---------------------------------------------
+// ---------------------------------------------
+
+
+// Dynamic Routes
+// ---------------------------------------------
+let dynamicRoutes = (ejsObjects) => {
+    for (let i=0; i < ejsObjects.posts.length; i++) {
+        app.get(ejsObjects.posts[i].postLink, (req, res) => {
+            ejsObjects.siteTitle = ejsObjects.posts[i].postHeadline;
+            ejsObjects.siteText = ejsObjects.posts[i].postText;
+            res.render("post",ejsObjects);
+        })
+    };
+};
