@@ -16,47 +16,39 @@ app.use(bodyParser.urlencoded({ extended:true }));
 // ---------------------------------------------
 mongoose.connect('mongodb://localhost:27017/KD_Blog_Site');
 
-const blogPostSchema = new mongoose.Schema(
+const siteSchema = new mongoose.Schema(
     {
         _id: {
             type: Number,
-            required: [true, 'Set Automatic timestamp as ID']
+            required: [true, 'Set Current timestamp as ID']
         },
-        postHeadline: {
+        siteHeadline: {
             type: String,
             required: [true, 'A Post Headline is needed']
         },
-        postBody: {
+        siteBody: {
             type: String,
             required: [true, 'A Post needs a text!']
         },
-        postExcerpt: {
+        siteExcerpt: {
             type: String,
             required: [true, 'Post Excerpt needed']
         },
-        postLink: {
+        siteLink: {
             type: String,
             required: [true, 'Post Link is needed']
+        },
+        siteType: {
+            type: Boolean,
+            required: [true, 'Site (true) or Post (false)']
         }
     }
 );
 
-const blogSiteSchema = new mongoose.Schema(
-    {
-        siteHeadline: {
-            type: String,
-            required: [true, 'The Page needs a headline']
-        },
-        siteText: String,
-        siteLink: {
-            type: String,
-            required: [true, 'The Site Route is needed']
-        }
-    }
-)
 
-const Site = mongoose.model('Site', blogSiteSchema);
-const Post = mongoose.model('Post', blogPostSchema);
+
+const Site = mongoose.model('Site', siteSchema);
+
 
 // GLOBAL VARIABLES
 // ---------------------------------------------
@@ -65,57 +57,52 @@ let ejsSiteObjects = {
     siteText: '',
     posts: []
 };
+let i = 0;
+let j = 0;
+const siteConstructor = () => {
+    const siteArray = [];
+    const postArray = [];
+    ejsSiteObjects.posts = [];
 
-let ejsPostObject = {
-    siteTitle: '',
-    siteText: ''
+    Site.find((err, sites) => {
+        if (err) {
+            console.log(err);
+        } else {
+            sites.forEach((site) => {
+                if (site.siteType) {    
+                    siteArray.push(site);
+                    i++;
+                } else {
+                    postArray.push(site);
+                    j++;
+                }
+            });
+            ejsSiteObjects.posts = postArray;
+            siteArray.forEach((site) => {
+                app.get(site.siteLink, (req, res) => {
+                    ejsSiteObjects.siteTitle = site.siteHeadline;
+                    ejsSiteObjects.siteText = site.siteBody;
+                    res.render('site', ejsSiteObjects);
+                });
+            });
+            postArray.forEach((post) => {
+                app.get(post.siteLink, (req, res) => {
+                    ejsSiteObjects.siteTitle = post.siteHeadline;
+                    ejsSiteObjects.siteText = post.siteBody;
+                    res.render('post', ejsSiteObjects);
+                });
+            })
+        }
+    });
+console.log(i,j);
 }
+
+
 
 //ROUTES
 // ---------------------------------------------
-
-const siteConstructor = () => {
-            Site.find((err, sites) => {
-            if (err) {
-                console.log(err);
-            } else {
-                sites.forEach((site) => {
-                    app.get(site.siteLink, (req, res) => {
-                        ejsSiteObjects.siteTitle = site.siteHeadline;
-                        ejsSiteObjects.siteText = site.siteText;
-                        if (site.siteHeadline === 'Home') {
-                            let postArray = [];
-                            Post.find((err, posts) => {
-                                if (err) {
-                                    console.log(err);
-                                } else {
-                                    posts.forEach((post) => {
-                                        postArray.push(post);
-                                    });
-                                    ejsSiteObjects.posts = postArray;
-                                }
-                            });
-                            
-                            console.log(ejsSiteObjects.posts);
-                            ejsSiteObjects.posts.forEach((post) => {
-                                app.get(post.postLink, (request, response) => {
-                                    ejsPostObject.siteTitle = post.postHeadline;
-                                    ejsPostObject.siteText = post.postBody;
-                                    response.render("post", ejsPostObject);
-                                });
-                            });
-                        } else {
-                            //ejsSiteObjects.posts = [];
-                            console.log('Was machst Du hier?');
-                        }
-                        res.render("site", ejsSiteObjects);
-                    });
-                });
-            }
-        })
-};
-
 siteConstructor();
+
 
 
 // POSTS
@@ -124,20 +111,28 @@ app.post("/", (req, res) => {
     let postHeadline = req.body.postHeadline;
     let postText = req.body.postText;
     let postLink = postHeadline.replace(/[^0-9a-z\ ]/gi, '').toLocaleLowerCase();
-    postLink = '/posts/' + postLink.replace(/ /g,'-');
     let postExcerpt = postText.slice(0, 100);
+    let siteOrPost = false;
+    let linkPrefix = '/posts/';
+    console.log(req.body.siteOrPost);
+    if (req.body.siteOrPost) {
+        siteOrPost = true; 
+        linkPrefix = '/';
+    }
+    postLink = linkPrefix + postLink.replace(/ /g,'-');
 
-    const post = new Post(
+    const post = new Site(
         {
             _id: Date.now(),
-            postHeadline: postHeadline,
-            postBody : postText,
-            postExcerpt: postExcerpt,
-            postLink: postLink
+            siteHeadline: postHeadline,
+            siteBody : postText,
+            siteExcerpt: postExcerpt,
+            siteLink: postLink,
+            siteType: siteOrPost
         }
     )
 
-    Post.insertMany([post], (err, posts) => {
+    Site.insertMany([post], (err, posts) => {
         if (err) {
             console.log(err);
         } else {
@@ -145,9 +140,14 @@ app.post("/", (req, res) => {
         }
     });
 
-    //ejsSiteObjects.posts.push(post);
-    siteConstructor();
-    res.redirect("/");
+    // Recall siteConstructor
+    const reConstruct = async () => {
+        await siteConstructor();
+        res.redirect("/");
+    }
+
+    reConstruct();    
+  
 });
 
 // SERVER
@@ -155,5 +155,3 @@ app.post("/", (req, res) => {
 app.listen(process.env.PORT || 3000, () => {
     console.log('Server ON on Port 3000');
 });
-
-
